@@ -45,6 +45,29 @@ uasort($sent, fn($a, $b) => strcmp($b['t'], $a['t']));
 
 $label = ['open' => 'Opened', 'price' => 'Reached the price', 'end' => 'Read to the end'];
 
+/* What was actually sent. The proposal itself is the record — reading it back
+   means there is nothing to keep in step, and an edit made by hand afterwards
+   shows up here too. Returns [] when the folder has been deleted. */
+function proposal_content(string $slug): array {
+    $file = __DIR__ . '/' . $slug . '/index.html';
+    if (!is_file($file)) { return []; }
+    $s = (string)file_get_contents($file);
+
+    $grab = static function (string $pattern) use ($s): string {
+        if (!preg_match($pattern, $s, $m)) { return ''; }
+        return trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
+    };
+
+    return [
+        'template'  => $grab('~<title>(.*?)</title>~s'),
+        'headline'  => $grab('~<h1[^>]*>(.*?)</h1>~s'),
+        'to'        => $grab('~id="mFor"[^>]*>(.*?)</span>~s'),
+        'dated'     => $grab('~id="mDate"[^>]*>(.*?)</span>~s'),
+        'situation' => $grab('~id="situation"[^>]*>(.*?)</p>~s'),
+        'built'     => gmdate('Y-m-d H:i', (int)filemtime($file)),
+    ];
+}
+
 /* Depth reached across every visit, and how many separate visits there were.
    A gap of more than thirty minutes counts as a new visit. */
 function summarise(array $events): array {
@@ -81,6 +104,21 @@ function summarise(array $events): array {
  td{padding:8px 0;border-top:1px solid #f5f5f4;color:#57534e}
  td.t{font-family:ui-monospace,monospace;font-size:.8125rem;color:#a8a29e;white-space:nowrap;width:12em}
  .empty{color:#a8a29e;font-size:.9375rem;margin-top:12px}
+ .sent{margin-top:14px;border-top:1px solid #f5f5f4;padding-top:10px}
+ .sent summary{font-size:.8125rem;color:#78716c;cursor:pointer;list-style:none;
+               display:inline-flex;align-items:center;gap:6px}
+ .sent summary::-webkit-details-marker{display:none}
+ .sent summary::before{content:'▸';font-size:.6875rem;color:#a8a29e}
+ .sent[open] summary::before{content:'▾'}
+ .sent summary:hover{color:#1c1917}
+ .sent-in{margin-top:12px;padding:14px 16px;background:#fafaf9;
+          border:1px solid #f0eeec;border-radius:4px}
+ .sent-meta{font-size:.75rem;color:#a8a29e;font-family:ui-monospace,monospace;
+            margin-bottom:10px}
+ .sent-meta a{color:#78716c}
+ .sent-in h3{font-size:1rem;letter-spacing:-.01em;margin:0 0 8px}
+ .sent-in p{font-size:.9375rem;color:#57534e;line-height:1.6;margin:0;
+            max-width:64ch;white-space:pre-wrap}
 </style></head><body><div class="w">
 <h1>Proposal activity</h1>
 <p class="sub">Times are UTC. New Zealand is 12 hours ahead in winter, 13 in daylight saving.
@@ -97,6 +135,23 @@ Elapsed time is a floor on attention, not a measure of it — a tab left open in
       <?= h($slug) ?><?= $info['version'] !== '' ? ' · ' . h($info['version']) : '' ?><?= $info['t'] !== '' ? ' · sent ' . h(substr($info['t'], 0, 10)) : '' ?>
     </div>
     <span class="depth<?= $s['visits'] === 0 ? ' cold' : '' ?>"><?= h($s['depth']) ?></span>
+    <?php $c = proposal_content($slug); if ($c): ?>
+      <details class="sent">
+        <summary>What you sent</summary>
+        <div class="sent-in">
+          <div class="sent-meta">
+            <?= h($c['template']) ?> · dated <?= h($c['dated']) ?> ·
+            built <?= h($c['built']) ?> UTC ·
+            <a href="<?= h($slug) ?>/" target="_blank" rel="noopener">open the page</a>
+          </div>
+          <h3><?= h($c['headline']) ?></h3>
+          <p><?= h($c['situation']) ?></p>
+        </div>
+      </details>
+    <?php elseif ($info['t'] !== ''): ?>
+      <p class="empty">No page on the server for this one, so no copy of what you sent.</p>
+    <?php endif; ?>
+
     <?php if ($s['visits'] > 0): ?>
       <span class="depth"><?= $s['visits'] ?> visit<?= $s['visits'] === 1 ? '' : 's' ?></span>
       <table><?php usort($events, fn($a, $b) => strcmp($b['t'], $a['t']));
