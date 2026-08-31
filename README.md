@@ -35,6 +35,28 @@ slug is HTML-escaped. The deploy fails if a template uses a placeholder that
 `_new.php` does not know how to fill, so a typo cannot ship as literal
 `__SITUAION__` text on a client's page.
 
+## Editing the copy in bulk
+
+`tools/extract_copy.py` pulls every block of prose out of both templates into
+JSON, recording the exact character range each one occupies. Claude publishes
+that as a copy deck — all 248 blocks in page order, editable in the browser —
+and `tools/apply_copy.py` splices the edited blocks back by range, leaving
+everything nobody touched byte for byte as it was.
+
+    python3 tools/extract_copy.py > copy.json
+    # edit in the deck, then
+    python3 tools/apply_copy.py edited.json
+
+Ranges rather than search-and-replace because the short blocks repeat: "75 min"
+appears four times in one template and "NZ$600" three. apply_copy.py refuses to
+write if a block's recorded range no longer holds the text it was extracted
+from — that means the template moved under the deck, and splicing blind would
+corrupt it.
+
+Blocks carrying a `__PLACEHOLDER__` are locked in the deck: they are filled per
+proposal from the form. They are also the only blocks with inline markup, which
+is why every editable block can be treated as plain text.
+
 ## How the deploy works, and why it is shaped this way
 
 `public_html/p/` holds two kinds of thing at once:
