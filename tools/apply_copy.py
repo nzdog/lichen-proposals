@@ -36,6 +36,12 @@ def main(path):
             print("Re-run extract_copy.py and redo the edits.", file=sys.stderr)
             return 1
 
+        # Leading and trailing whitespace is never meaningful in a copy block,
+        # and contenteditable collects it easily.
+        for b in data["blocks"]:
+            if b.get("edited") is not None:
+                b["edited"] = b["edited"].strip()
+
         changed = [b for b in data["blocks"]
                    if b.get("edited") is not None and b["edited"] != b["html"]]
         for b in sorted(changed, key=lambda x: -x["start"]):
