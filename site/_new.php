@@ -75,9 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'from'      => $field('from'),
         'email'     => $field('email'),
         'headline'  => $field('headline'),
+        'email_to'  => $field('email_to'),
     ];
 
-    if (!isset(VERSIONS[$version])) {
+    if ($f['email_to'] !== '' && !filter_var($f['email_to'], FILTER_VALIDATE_EMAIL)) {
+        $error = 'That does not look like an email address. Leave it blank if you do not have one.';
+    } elseif (!isset(VERSIONS[$version])) {
         $error = 'Pick a version.';
     } elseif ($f['to'] === '') {
         $error = 'Their name is needed — it also decides the folder name.';
@@ -117,10 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 @file_put_contents(__DIR__ . '/_log/sent.csv',
                     gmdate('Y-m-d H:i:s') . ',' . $slug . ',' . $version . ','
                     . str_replace(["\n", ","], ' ', $f['to']) . ','
-                    . str_replace(["\n", ","], ' ', $f['org']) . "\n",
+                    . str_replace(["\n", ","], ' ', $f['org']) . ','
+                    . str_replace(["\n", ","], ' ', $f['email_to']) . "\n",
                     FILE_APPEND | LOCK_EX);
 
-                $made = ['slug' => $slug, 'url' => 'https://lichenprotocol.com/p/' . $slug . '/'];
+                $made = [
+                    'slug'     => $slug,
+                    'url'      => 'https://lichenprotocol.com/p/' . $slug . '/',
+                    'email_to' => $f['email_to'],
+                    'to'       => $f['to'],
+                ];
             }
         } catch (Throwable $e) {
             $error = $e->getMessage();
@@ -129,6 +138,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($preview !== '') { echo $preview; exit; }
+
+/* The covering email, pre-addressed with the link already in it and the
+   archive address in the BCC — so the record happens because the button was
+   clicked, not because anyone remembered to copy it in. */
+function covering_email(array $made): string {
+    $first = trim(explode(' ', trim($made['to']))[0]);
+    $body  = ($first !== '' ? $first : 'Hello') . ",\n\n"
+           . "Good to talk. Here is the proposal:\n\n"
+           . $made['url'] . "\n\n"
+           . "It covers the first session, what the eight weeks look like, "
+           . "and what it costs.\n\n"
+           . "Read it and tell me what you think — no rush.\n\n";
+
+    $q = ['subject' => 'The Lichen Protocol — Field Exit'];
+    $archive = (string)(proposal_config()['archive_email'] ?? '');
+    if ($archive !== '') { $q['bcc'] = $archive; }
+    $q['body'] = $body;
+
+    return 'mailto:' . rawurlencode($made['email_to']) . '?'
+         . http_build_query($q, '', '&', PHP_QUERY_RFC3986);
+}
 
 $self = '?k=' . rawurlencode((string)($_GET['k'] ?? ''));
 $v    = (string)($_POST['version'] ?? 'general');
@@ -199,6 +229,9 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
     <p>Written to <code><?= h($made['slug']) ?>/index.html</code> — nothing else to do. Send them:</p>
     <p><code id="u"><?= h($made['url']) ?></code></p>
     <div class="actions">
+<?php if ($made['email_to'] !== ''): ?>
+      <a href="<?= h(covering_email($made)) ?>"><button type="button">Write the email</button></a>
+<?php endif; ?>
       <a href="<?= h($made['url']) ?>" target="_blank" rel="noopener"><button type="button" class="ghost">Open it</button></a>
       <button type="button" class="ghost" id="copy">Copy the link</button>
       <a href="<?= h($self) ?>"><button type="button" class="ghost">Write another</button></a>
@@ -232,6 +265,12 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
         <label for="org">Firm or company <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
         <input id="org" name="org" placeholder="Bell Gully" autocomplete="off" value="<?= $val('org') ?>">
       </div>
+    </div>
+
+    <div class="f">
+      <label for="email_to">Their email <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="email_to" name="email_to" type="email" placeholder="jeremy@example.com" autocomplete="off" value="<?= $val('email_to') ?>">
+      <p class="hint">Only used to open a pre-addressed covering email once the proposal is built, with the link in it and your archive address in the BCC. Nothing is sent from here.</p>
     </div>
 
     <div class="f">

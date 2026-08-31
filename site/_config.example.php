@@ -13,4 +13,8 @@ return [
 
     // Opens the activity log: /p/_view.php?k=...
     'view_key' => 'CHANGE-ME-viewer',
+
+    // BCC'd on every covering email written from the built-proposal panel,
+    // so there is an archive of what was actually sent. Leave empty for none.
+    'archive_email' => '',
 ];

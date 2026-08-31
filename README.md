@@ -10,8 +10,15 @@ unguessable URL. Push to `main` and the templates and PHP redeploy themselves.
 |---|---|
 | Write a proposal | `https://lichenprotocol.com/p/_new.php?k=<new_key>` |
 | See who has read one | `https://lichenprotocol.com/p/_view.php?k=<view_key>` |
+| Stop counting your own opens | `https://lichenprotocol.com/p/_me.php?k=<new_key>`, once per browser |
 
 Both keys live in `_config.php` on the server. Neither is in this repo.
+
+Give it their email address as well and the built panel offers a **Write the
+email** button: your own mail client opens, addressed to them, with the link in
+the body and `archive_email` from `_config.php` in the BCC. Nothing is sent from
+the server — you still write and send it yourself — but the archive copy happens
+because you clicked the button rather than because you remembered.
 
 Filling the form creates `p/<slug>/index.html` and gives you the link. The slug
 is their name plus six random hex characters, so `James Whitmore` becomes
@@ -84,7 +91,9 @@ Each page beacons `../_track.php` on load, on reaching the price, and on
 reaching the close — a UTC timestamp, the slug and the event. No IP, no user
 agent, no cookie, no third party. `_new.php` separately records what was sent to
 whom in `_log/sent.csv`, so `_view.php` can show a proposal that was sent and
-never opened. That silence is the most useful thing in there.
+never opened. Each card also carries a collapsed **What you sent**, read back
+from the proposal's own HTML rather than from a stored copy — so there is
+nothing to keep in step, and a page edited by hand afterwards shows its edit. That silence is the most useful thing in there.
 
 Read the depth badge, not the clock. Elapsed time is a floor on attention: a tab
 left open inflates it, and a page restored from bfcache can fire `end` before

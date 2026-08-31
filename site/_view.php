@@ -25,7 +25,8 @@ if (is_file($file)) {
     foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $row) {
         $p = explode(',', trim($row));
         if (count($p) < 4) { continue; }
-        $sent[$p[1]] = ['t' => $p[0], 'version' => $p[2], 'to' => $p[3], 'org' => $p[4] ?? ''];
+        $sent[$p[1]] = ['t' => $p[0], 'version' => $p[2], 'to' => $p[3],
+                        'org' => $p[4] ?? '', 'email' => $p[5] ?? ''];
     }
 }
 
@@ -33,12 +34,13 @@ if (is_file($file)) {
 foreach (glob(__DIR__ . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
     $slug = basename($dir);
     if ($slug[0] === '_' || isset($sent[$slug])) { continue; }
-    $sent[$slug] = ['t' => gmdate('Y-m-d H:i:s', (int)filemtime($dir)), 'version' => '', 'to' => '', 'org' => ''];
+    $sent[$slug] = ['t' => gmdate('Y-m-d H:i:s', (int)filemtime($dir)),
+                    'version' => '', 'to' => '', 'org' => '', 'email' => ''];
 }
 
 foreach (array_keys($hits) as $slug) {
     if (!isset($sent[$slug])) {
-        $sent[$slug] = ['t' => '', 'version' => '', 'to' => '', 'org' => ''];
+        $sent[$slug] = ['t' => '', 'version' => '', 'to' => '', 'org' => '', 'email' => ''];
     }
 }
 uasort($sent, fn($a, $b) => strcmp($b['t'], $a['t']));
@@ -132,7 +134,7 @@ Elapsed time is a floor on attention, not a measure of it — a tab left open in
   <div class="card">
     <h2><?= h($info['to'] !== '' ? $info['to'] : $slug) ?><?= $info['org'] !== '' ? ' <span style="color:#a8a29e;font-weight:400">· ' . h($info['org']) . '</span>' : '' ?></h2>
     <div class="meta">
-      <?= h($slug) ?><?= $info['version'] !== '' ? ' · ' . h($info['version']) : '' ?><?= $info['t'] !== '' ? ' · sent ' . h(substr($info['t'], 0, 10)) : '' ?>
+      <?= h($slug) ?><?= $info['version'] !== '' ? ' · ' . h($info['version']) : '' ?><?= $info['t'] !== '' ? ' · sent ' . h(substr($info['t'], 0, 10)) : '' ?><?= ($info['email'] ?? '') !== '' ? ' · ' . h($info['email']) : '' ?>
     </div>
     <span class="depth<?= $s['visits'] === 0 ? ' cold' : '' ?>"><?= h($s['depth']) ?></span>
     <?php $c = proposal_content($slug); if ($c): ?>
