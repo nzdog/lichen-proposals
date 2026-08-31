@@ -93,7 +93,12 @@ agent, no cookie, no third party. `_new.php` separately records what was sent to
 whom in `_log/sent.csv`, so `_view.php` can show a proposal that was sent and
 never opened. Each card also carries a collapsed **What you sent**, read back
 from the proposal's own HTML rather than from a stored copy — so there is
-nothing to keep in step, and a page edited by hand afterwards shows its edit. That silence is the most useful thing in there.
+nothing to keep in step, and a page edited by hand afterwards shows its edit.
+
+Deleting a proposal's folder is how a proposal is withdrawn: it stops appearing
+in the log. One place to do it rather than two. Nothing is destroyed — the rows
+stay in `sent.csv` and `hits.csv`, a footnote names what is hidden, and putting
+the folder back brings it and its history straight back. That silence is the most useful thing in there.
 
 Read the depth badge, not the clock. Elapsed time is a floor on attention: a tab
 left open inflates it, and a page restored from bfcache can fire `end` before

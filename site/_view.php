@@ -43,6 +43,18 @@ foreach (array_keys($hits) as $slug) {
         $sent[$slug] = ['t' => '', 'version' => '', 'to' => '', 'org' => '', 'email' => ''];
     }
 }
+/* Deleting a proposal's folder is how a proposal is withdrawn: one place to do
+   it rather than two. The rows stay in sent.csv and hits.csv — nothing is
+   destroyed here — they are simply not shown. */
+$removed = [];
+foreach (array_keys($sent) as $slug) {
+    if (!is_file(__DIR__ . '/' . $slug . '/index.html')) {
+        $removed[] = $slug;
+        unset($sent[$slug]);
+    }
+}
+sort($removed);
+
 uasort($sent, fn($a, $b) => strcmp($b['t'], $a['t']));
 
 $label = ['open' => 'Opened', 'price' => 'Reached the price', 'end' => 'Read to the end'];
@@ -121,6 +133,11 @@ function summarise(array $events): array {
  .sent-in h3{font-size:1rem;letter-spacing:-.01em;margin:0 0 8px}
  .sent-in p{font-size:.9375rem;color:#57534e;line-height:1.6;margin:0;
             max-width:64ch;white-space:pre-wrap}
+ .gone{margin-top:8px;font-size:.8125rem;color:#a8a29e}
+ .gone summary{cursor:pointer}
+ .gone p{margin:8px 0 0;font-family:ui-monospace,monospace;font-size:.75rem;
+         word-break:break-all}
+ .gone p.why{font-family:inherit;font-size:.8125rem;max-width:60ch}
 </style></head><body><div class="w">
 <h1>Proposal activity</h1>
 <p class="sub">Times are UTC. New Zealand is 12 hours ahead in winter, 13 in daylight saving.
@@ -150,8 +167,6 @@ Elapsed time is a floor on attention, not a measure of it — a tab left open in
           <p><?= h($c['situation']) ?></p>
         </div>
       </details>
-    <?php elseif ($info['t'] !== ''): ?>
-      <p class="empty">No page on the server for this one, so no copy of what you sent.</p>
     <?php endif; ?>
 
     <?php if ($s['visits'] > 0): ?>
@@ -166,4 +181,14 @@ Elapsed time is a floor on attention, not a measure of it — a tab left open in
     <?php endif; ?>
   </div>
 <?php endforeach; ?>
+
+<?php if ($removed): ?>
+  <details class="gone">
+    <summary><?= count($removed) ?> proposal<?= count($removed) === 1 ? '' : 's' ?>
+      whose page has been deleted <?= count($removed) === 1 ? 'is' : 'are' ?> not shown</summary>
+    <p><?= h(implode(', ', $removed)) ?></p>
+    <p class="why">Their rows are still in the log; only the page is gone.
+       Put the folder back and the proposal reappears here.</p>
+  </details>
+<?php endif; ?>
 </div></body></html>
