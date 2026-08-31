@@ -89,8 +89,8 @@ left open inflates it, and a page restored from bfcache can fire `end` before
 
 ## Offline fallback
 
-`tools/build_offline.py` still builds the original single-file generator — the
-one that runs entirely in the browser and hands back an `index.html` to upload
+`python3 tools/build_offline.py` writes `tools/newproposal.html`, the original single-file
+generator — it runs entirely in the browser and hands back an `index.html` to upload
 by hand. It needs no server and no network. Keep it for when the host is down;
 the web generator is the everyday path.
 

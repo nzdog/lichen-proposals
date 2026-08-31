@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Inline the proposal templates into the generator shell.
+"""Build the offline single-file generator.
 
-templates/*.html  +  shell.html  ->  newproposal.html
+site/_tpl/*.html  +  tools/shell.html  ->  tools/newproposal.html
 
 The generator is deliberately one self-contained file: it is opened from disk,
 fills a template in the browser, and hands back an index.html to upload. Editing
 a 40KB template inside a JSON string is miserable, so the templates live as real
 HTML here and this script stitches them back together.
+
+This is the fallback for when the host is down — it runs entirely in the
+browser and hands back an index.html to upload by hand. The everyday path is
+the web generator at /p/_new.php.
 
 The encoding matches the original byte for byte: ASCII-escaped JSON, with "</"
 escaped so a "</script>" inside a template cannot close the generator's own
@@ -16,12 +20,13 @@ import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).parent
+ 
 ORDER = ["general", "lawyer"]  # dropdown order in shell.html
 
 
 def main() -> None:
     templates = {
-        name: (ROOT / "templates" / f"{name}.html").read_text()
+        name: (ROOT.parent / "site" / "_tpl" / f"{name}.html").read_text()
         for name in ORDER
     }
     blob = json.dumps(templates, ensure_ascii=True).replace("</", "<\\/")

@@ -12,3 +12,4 @@ site/*/
 !site/_log/
 
 .DS_Store
+tools/newproposal.html
