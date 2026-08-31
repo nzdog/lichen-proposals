@@ -80,9 +80,23 @@ left open inflates it, and a page restored from bfcache can fire `end` before
    Until it exists, both `_new.php` and `_view.php` return 404 — they fail closed.
 
 2. **Add three repository secrets** under Settings → Secrets and variables →
-   Actions: `FTP_HOST`, `FTP_USER`, `FTP_PASS`. Use the cPanel FTP account for
-   the domain. If TLS fails, set `FTP_HOST` to the server's own hostname
-   (the one in the cPanel URL) rather than `lichenprotocol.com`.
+   Actions:
+
+   | Secret | Value | Where to find it |
+   |---|---|---|
+   | `FTP_HOST` | `minnie.whsl206.com` | The hostname in your cPanel URL — **not** `lichenprotocol.com`. The server's TLS certificate is issued for its own hostname, and the deploy verifies it. |
+   | `FTP_USER` | `deploy@lichenprotocol.com` | cPanel → Files → **FTP Accounts** → Add FTP Account. |
+   | `FTP_PASS` | the password you set there | Use cPanel's generator; you never type it again. |
+
+   Make a **dedicated FTP account**, not the main cPanel login. The main login's
+   password is your cPanel password — putting that in GitHub gives every
+   workflow run the keys to email, databases and backups. A dedicated account
+   restricted to `public_html/p` can only write where it needs to.
+
+   If you do restrict it that way, also add a repository **variable** (not
+   secret) `FTP_REMOTE_DIR` set to `.` — that account already logs into
+   `public_html/p`, so without it the files land in `p/public_html/p/`. Leave
+   the variable unset if you used the main cPanel account.
 
 3. **Push to `main`.** The workflow checks PHP syntax and template
    placeholders, uploads, then verifies the live site.

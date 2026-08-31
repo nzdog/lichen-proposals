@@ -41,18 +41,30 @@ jobs:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
           FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_REMOTE_DIR: ${{ vars.FTP_REMOTE_DIR }}
         run: |
           set -euo pipefail
           : "${FTP_HOST:?set the FTP_HOST repository secret}"
           : "${FTP_USER:?set the FTP_USER repository secret}"
           : "${FTP_PASS:?set the FTP_PASS repository secret}"
 
+          # Paths are relative to whatever directory the FTP account logs into.
+          # The main cPanel account lands in /home/<user>, so the target is
+          # public_html/p. A dedicated FTP account restricted to public_html/p
+          # lands there already — set the FTP_REMOTE_DIR variable to "." for
+          # that case, or the files end up in p/public_html/p/.
+          REMOTE_DIR="${FTP_REMOTE_DIR:-public_html/p}"
+          REMOTE_DIR="${REMOTE_DIR%/}"
+          [ "$REMOTE_DIR" = "." ] && REMOTE_DIR=""
+          [ -n "$REMOTE_DIR" ] && REMOTE_DIR="$REMOTE_DIR/"
+          echo "Target: ftps://$FTP_HOST/${REMOTE_DIR}"
+
           # Explicit per-file uploads. There is deliberately no mirror, sync or
           # delete anywhere in this job: proposal folders and _log/ are created
           # on the server at runtime and are not in this repo, so anything that
           # could remove unknown remote files would destroy live client pages.
           mapfile -t FILES < <(cd site && find . -type f -printf '%P\n' | sort)
-          echo "Uploading ${#FILES[@]} files to public_html/p/"
+          echo "Uploading ${#FILES[@]} files"
 
           for f in "${FILES[@]}"; do
             if [ "$f" = "_config.php" ]; then
@@ -61,7 +73,7 @@ jobs:
             fi
             curl --fail --silent --show-error --ssl-reqd --ftp-create-dirs \
                  --user "$FTP_USER:$FTP_PASS" \
-                 -T "site/$f" "ftps://$FTP_HOST/public_html/p/$f"
+                 -T "site/$f" "ftps://$FTP_HOST/${REMOTE_DIR}$f"
             echo "  $f"
           done
 
