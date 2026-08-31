@@ -126,4 +126,5 @@ jobs:
           check https://lichenprotocol.com/p/_log/hits.csv     403
           check https://lichenprotocol.com/p/_tpl/general.html 403
           check https://lichenprotocol.com/p/_new.php          404
+          check https://lichenprotocol.com/p/_me.php           404
           check https://lichenprotocol.com/p/_view.php         404

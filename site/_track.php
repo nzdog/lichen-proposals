@@ -7,6 +7,10 @@ $e  = preg_replace('/[^a-z]/',          '', $_GET['e']  ?? '');
 http_response_code(204);
 if ($id === '' || $e === '' || strlen($id) > 64) { exit; }
 
+/* Nigel's own browsers carry this, set by _me.php. Checking a link should not
+   look like the recipient reading it. */
+if (($_COOKIE['lp_no_track'] ?? '') === '1') { exit; }
+
 $dir = __DIR__ . '/_log';
 if (!is_dir($dir)) { @mkdir($dir, 0755, true); }
 @file_put_contents($dir . '/hits.csv',
