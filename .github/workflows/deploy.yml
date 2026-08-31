@@ -64,13 +64,18 @@ jobs:
           dav() { curl -sS -m 60 --user "$WEBDISK_USER:$WEBDISK_PASS" "$@"; }
 
           # Fail early and legibly on a bad host, bad password or blocked port,
-          # rather than part-way through the upload.
-          code=$(dav -o /dev/null -w '%{http_code}' "$BASE/${DIR}")
+          # rather than part-way through the upload. PROPFIND is the WebDAV way
+          # to ask "does this collection exist and may I read it" — a plain GET
+          # on a collection answers 200 with an empty body on some servers and
+          # 405 on others, so it cannot tell success from misconfiguration.
+          code=$(dav -o /dev/null -w '%{http_code}' -X PROPFIND -H 'Depth: 0' "$BASE/${DIR}")
           case "$code" in
-            200|207|301|302) echo "Connected." ;;
+            207|200) echo "Connected." ;;
             401) echo "::error::401 — WEBDISK_USER or WEBDISK_PASS is wrong."; exit 1 ;;
-            404) echo "::error::404 — ${DIR} does not exist. Check WEBDISK_DIR."; exit 1 ;;
-            000) echo "::error::Could not reach $BASE. Is Web Disk enabled, and is 2078 open?"; exit 1 ;;
+            403) echo "::error::403 — that account cannot read ${DIR}. Check its Directory and permissions."; exit 1 ;;
+            404) echo "::error::404 — ${DIR} does not exist from this account's root. Check the WEBDISK_DIR variable."; exit 1 ;;
+            405) echo "::error::405 — PROPFIND refused. Is $BASE really a WebDAV endpoint?"; exit 1 ;;
+            000) echo "::error::Could not reach $BASE. Is Web Disk enabled, and is 2078 reachable?"; exit 1 ;;
             *)   echo "::error::Unexpected $code from $BASE/${DIR}"; exit 1 ;;
           esac
 
