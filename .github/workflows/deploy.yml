@@ -1,0 +1,85 @@
+name: Deploy to lichenprotocol.com
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time. A second push waits rather than interleaving uploads.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PHP syntax
+        run: |
+          set -euo pipefail
+          find site -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Check every template placeholder is one _new.php substitutes
+        run: |
+          set -euo pipefail
+          known='__HEADLINE__ __TO__ __FROM__ __EMAIL__ __DATE__ __SITUATION__ __SLUG__'
+          fail=0
+          for f in site/_tpl/*.html; do
+            for ph in $(grep -o '__[A-Z_]\+__' "$f" | sort -u); do
+              case " $known " in
+                *" $ph "*) ;;
+                *) echo "::error file=$f::$ph is in the template but _new.php never fills it"; fail=1 ;;
+              esac
+            done
+          done
+          exit $fail
+
+      - name: Upload over FTPS
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          set -euo pipefail
+          : "${FTP_HOST:?set the FTP_HOST repository secret}"
+          : "${FTP_USER:?set the FTP_USER repository secret}"
+          : "${FTP_PASS:?set the FTP_PASS repository secret}"
+
+          # Explicit per-file uploads. There is deliberately no mirror, sync or
+          # delete anywhere in this job: proposal folders and _log/ are created
+          # on the server at runtime and are not in this repo, so anything that
+          # could remove unknown remote files would destroy live client pages.
+          mapfile -t FILES < <(cd site && find . -type f -printf '%P\n' | sort)
+          echo "Uploading ${#FILES[@]} files to public_html/p/"
+
+          for f in "${FILES[@]}"; do
+            if [ "$f" = "_config.php" ]; then
+              echo "  refusing to upload _config.php — keys live only on the server"
+              exit 1
+            fi
+            curl --fail --silent --show-error --ssl-reqd --ftp-create-dirs \
+                 --user "$FTP_USER:$FTP_PASS" \
+                 -T "site/$f" "ftps://$FTP_HOST/public_html/p/$f"
+            echo "  $f"
+          done
+
+      - name: Verify the live site
+        run: |
+          set -euo pipefail
+          check() {
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$1")
+            if [ "$code" != "$2" ]; then
+              echo "::error::$1 returned $code, expected $2"; return 1
+            fi
+            echo "  $1 -> $code"
+          }
+          # The beacon answers, the directory does not list, the log is sealed,
+          # and the gated pages give nothing away without a key.
+          check https://lichenprotocol.com/p/_track.php      204
+          check https://lichenprotocol.com/p/                403
+          check https://lichenprotocol.com/p/_log/hits.csv   403
+          check https://lichenprotocol.com/p/_tpl/general.html 403
+          check https://lichenprotocol.com/p/_new.php        404
+          check https://lichenprotocol.com/p/_view.php       404

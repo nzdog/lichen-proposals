@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New proposal — The Lichen Protocol</title>
+<style>
+:root{
+  --bg:#fafaf9; --surface:#fff; --surface-2:#f5f5f4;
+  --border:#e7e5e4; --border-strong:#d6d3d1;
+  --ink:#1c1917; --ink-2:#292524; --muted:#78716c; --muted-2:#a8a29e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font:17px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+     background:var(--bg);color:var(--ink);padding:56px 24px 96px}
+.w{max-width:680px;margin:0 auto}
+h1{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
+p.sub{color:var(--muted);font-size:.9375rem;margin-bottom:36px}
+label{display:block;font-size:.6875rem;font-weight:600;text-transform:uppercase;
+      letter-spacing:.08em;color:var(--muted);margin-bottom:7px}
+.f{margin-bottom:22px}
+input,textarea,select{width:100%;font:inherit;font-size:.9375rem;color:var(--ink);
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:4px;
+  padding:10px 12px}
+textarea{min-height:120px;resize:vertical;line-height:1.6}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--muted);outline-offset:1px}
+.hint{font-size:.8125rem;color:var(--muted-2);margin-top:6px;line-height:1.5}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+button{font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;border:0;
+  background:var(--ink);color:var(--bg);padding:13px 24px;border-radius:4px;
+  transition:transform .15s ease}
+button:hover{transform:translateY(-1px)}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--border-strong)}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.out{margin-top:34px;padding:24px;background:var(--surface-2);border:1px solid var(--border);
+     border-radius:4px;display:none}
+.out.on{display:block}
+.out h2{font-size:1.0625rem;font-weight:600;margin-bottom:14px;letter-spacing:-.01em}
+.out ol{margin:0 0 4px 18px;font-size:.9375rem;color:var(--muted)}
+.out li{margin-bottom:9px}
+code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surface);
+  border:1px solid var(--border);padding:2px 6px;border-radius:3px;color:var(--ink-2);
+  word-break:break-all;user-select:all}
+hr{border:0;border-top:1px solid var(--border);margin:34px 0}
+</style>
+</head>
+<body>
+<div class="w">
+  <h1>New proposal</h1>
+  <p class="sub">Fill this in, download the file, drop the folder on the server. Nothing here leaves your computer.</p>
+
+  <div class="f">
+    <label for="tpl">Which version</label>
+    <select id="tpl">
+      <option value="general">General — "How to leave without making a mess of it"</option>
+      <option value="lawyer">Lawyer — "Before you decide what's next"</option>
+    </select>
+  </div>
+
+  <div class="f">
+    <label for="head">Headline</label>
+    <input id="head" autocomplete="off">
+    <p class="hint">Changes the big line at the top. Switching version resets it, unless you have edited it yourself.</p>
+  </div>
+
+  <div class="row">
+    <div class="f">
+      <label for="to">Their name</label>
+      <input id="to" placeholder="James Whitmore" autocomplete="off">
+    </div>
+    <div class="f">
+      <label for="org">Firm or company <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="org" placeholder="Bell Gully" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="f">
+    <label for="sit">What I heard</label>
+    <textarea id="sit" placeholder="Two or three sentences from your conversation, in their words. What they said they're done with. What they said they want, even if it was vague. The thing they came back to twice."></textarea>
+    <p class="hint">This is section 01 and the first thing they read. Worth more than everything else on this form.</p>
+  </div>
+
+  <div class="row">
+    <div class="f">
+      <label for="date">Date</label>
+      <input id="date" autocomplete="off">
+    </div>
+    <div class="f">
+      <label for="from">Your name</label>
+      <input id="from" value="Nigel Corbett" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="f">
+    <label for="email">Your email</label>
+    <input id="email" value="nigel@lichenprotocol.com" autocomplete="off">
+  </div>
+
+  <div class="actions">
+    <button id="go" type="button">Build the proposal</button>
+    <button id="prev" class="ghost" type="button">Preview first</button>
+  </div>
+
+  <div class="out" id="out">
+    <h2>Ready</h2>
+    <ol>
+      <li>Make a folder on the server at <code id="o-folder"></code></li>
+      <li>Put the downloaded <code>index.html</code> inside it</li>
+      <li>Send them <code id="o-url"></code></li>
+    </ol>
+    <hr style="margin:20px 0">
+    <div class="actions">
+      <button id="again" class="ghost" type="button">Download again</button>
+      <button id="copy" class="ghost" type="button">Copy the link</button>
+      <span id="copied" style="font-size:.8125rem;color:var(--muted);opacity:0;transition:opacity .2s">Copied</span>
+    </div>
+  </div>
+</div>
+
+<script>
+var TPL = __TEMPLATES__;
+var DEFAULT_H = {"general": "The Lichen Protocol Field Exit", "lawyer": "Before you decide what's next"};
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function slugify(s){
+  return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+                  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,28) || 'proposal';
+}
+function rand6(){
+  var a = new Uint8Array(3);
+  (window.crypto || window.msCrypto).getRandomValues(a);
+  return Array.from(a).map(function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+}
+function today(){
+  var d = new Date();
+  var months = ['January','February','March','April','May','June','July',
+                'August','September','October','November','December'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+document.getElementById('date').value = today();
+
+var headEl = document.getElementById('head');
+var tplEl  = document.getElementById('tpl');
+var headTouched = false;
+headEl.addEventListener('input', function(){ headTouched = true; });
+function syncHead(){
+  if (headTouched && headEl.value.trim() !== '') return;
+  headEl.value = DEFAULT_H[tplEl.value] || '';
+}
+tplEl.addEventListener('change', syncHead);
+syncHead();
+
+var state = { html:'', slug:'', url:'' };
+
+function build(){
+  var to    = document.getElementById('to').value.trim();
+  var org   = document.getElementById('org').value.trim();
+  var sit   = document.getElementById('sit').value.trim();
+  var date  = document.getElementById('date').value.trim();
+  var from  = document.getElementById('from').value.trim();
+  var email = document.getElementById('email').value.trim();
+
+  if (!to){ alert('Their name is needed \u2014 it also decides the folder name.'); return null; }
+
+  var slug = slugify(to) + '-' + rand6();
+  var who  = esc(to) + (org ? ' \u00b7 ' + esc(org) : '');
+
+  var html = TPL[document.getElementById('tpl').value]
+    .split('__TO__').join(who)
+    .split('__FROM__').join(esc(from))
+    .split('__EMAIL__').join(esc(email))
+    .split('__DATE__').join(esc(date))
+    .split('__SITUATION__').join(esc(sit))
+    .split('__HEADLINE__').join(esc(document.getElementById('head').value.trim()
+                                   || DEFAULT_H[document.getElementById('tpl').value]))
+    .split('__SLUG__').join(slug);
+
+  state.html = html;
+  state.slug = slug;
+  state.url  = 'https://lichenprotocol.com/p/' + slug + '/';
+  return state;
+}
+
+function download(){
+  var b = new Blob([state.html], {type:'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = 'index.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
+document.getElementById('go').addEventListener('click', function(){
+  if (!build()) return;
+  download();
+  document.getElementById('o-folder').textContent = 'public_html/p/' + state.slug + '/';
+  document.getElementById('o-url').textContent = state.url;
+  document.getElementById('out').classList.add('on');
+  document.getElementById('out').scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+document.getElementById('prev').addEventListener('click', function(){
+  if (!build()) return;
+  var w = window.open('', '_blank');
+  w.document.write(state.html); w.document.close();
+});
+
+document.getElementById('again').addEventListener('click', download);
+
+document.getElementById('copy').addEventListener('click', function(){
+  var c = document.getElementById('copied');
+  function done(){ c.style.opacity = 1; setTimeout(function(){ c.style.opacity = 0; }, 1800); }
+  try { navigator.clipboard.writeText(state.url).then(done, done); } catch(e){ done(); }
+});
+</script>
+</body>
+</html>

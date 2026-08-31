@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Field Exit Series</title>
+</head>
+<body>
+<style>
+/* ============================================================
+   Tokens lifted from nzdog/mastra → assets/css/
+   Warm stone ramp, system sans, no accent colour.
+   Dark values derived here — the repo ships no dark theme.
+   ============================================================ */
+:root{
+  --stone-50:#fafaf9;  --stone-100:#f5f5f4; --stone-200:#e7e5e4;
+  --stone-300:#d6d3d1; --stone-400:#a8a29e; --stone-500:#78716c;
+  --stone-600:#57534e; --stone-800:#292524; --stone-900:#1c1917;
+
+  --bg:var(--stone-50);
+  --surface:#ffffff;
+  --surface-2:var(--stone-100);
+  --border:var(--stone-200);
+  --border-strong:var(--stone-300);
+  --ink:var(--stone-900);
+  --ink-2:var(--stone-800);
+  --muted:var(--stone-500);
+  --muted-2:var(--stone-400);
+  --ring:var(--stone-500);
+  --focus:var(--stone-600);
+  --shadow-1:0 1px 2px rgba(0,0,0,.06);
+  --shadow-2:0 2px 8px rgba(0,0,0,.04);
+
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12100f; --surface:#1a1817; --surface-2:#221f1e;
+    --border:#2e2a28; --border-strong:#3d3835;
+    --ink:#f5f5f4; --ink-2:#e7e5e4;
+    --muted:#a8a29e; --muted-2:#8b8481;
+    --ring:#78716c; --focus:#a8a29e;
+    --shadow-1:0 1px 2px rgba(0,0,0,.5);
+    --shadow-2:0 2px 10px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12100f; --surface:#1a1817; --surface-2:#221f1e;
+  --border:#2e2a28; --border-strong:#3d3835;
+  --ink:#f5f5f4; --ink-2:#e7e5e4;
+  --muted:#a8a29e; --muted-2:#8b8481;
+  --ring:#78716c; --focus:#a8a29e;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 2px 10px rgba(0,0,0,.35);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--font);
+  background:var(--bg); color:var(--ink);
+  font-size:1.0625rem; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+*:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+.wrap{max-width:900px;margin:0 auto;padding:0 24px 88px}
+.narrow{max-width:680px}
+
+h1,h2,h3{font-weight:600;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
+h1{font-size:clamp(1.75rem,4.5vw,2.25rem);line-height:1.2}
+h2{font-size:1.5rem}
+h3{font-size:1.0625rem;letter-spacing:-.01em;font-weight:600}
+
+.label{
+  font-size:.6875rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);
+}
+.label-lg{font-size:.8125rem;letter-spacing:.05em;font-weight:600;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.hidden{display:none !important}
+
+/* ---------- template banner ---------- */
+.tpl{
+  margin-top:24px;padding:18px 20px;background:var(--surface-2);
+  border:1px solid var(--border-strong);border-radius:4px;
+  display:flex;flex-direction:column;gap:9px;
+}
+.tpl p{font-size:.875rem;color:var(--muted);line-height:1.6}
+.tpl code{
+  font-family:var(--mono);font-size:.8125rem;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--border);
+  padding:1px 5px;border-radius:3px;
+}
+
+/* ---------- brand mark (from nzdog/mastra: spinSlowSimple 20s linear) ---------- */
+@keyframes spinSlowSimple{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.logo-spin{
+  width:72px;height:72px;display:block;margin:0 auto 28px;
+  opacity:.85;animation:spinSlowSimple 20s linear infinite;
+  transition:opacity .2s ease;will-change:transform;backface-visibility:hidden;
+}
+.logo-spin:hover{opacity:1}
+@media(max-width:620px){.logo-spin{width:60px;height:60px;margin:0 auto 22px}}
+@media(prefers-reduced-motion:reduce){.logo-spin{animation:none !important}}
+
+/* ---------- masthead ---------- */
+.masthead{padding:64px 0 0}
+.brandline{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:44px;
+}
+.brandline .sep{width:3px;height:3px;border-radius:50%;background:var(--muted-2)}
+.standfirst{
+  font-size:1.125rem;line-height:1.7;color:var(--muted);
+  margin-top:20px;max-width:34em;
+}
+.meta{
+  display:flex;gap:36px;flex-wrap:wrap;margin-top:40px;
+  padding-top:20px;border-top:1px solid var(--border);
+}
+.meta div{display:flex;flex-direction:column;gap:4px}
+.meta .v{font-size:.9375rem;color:var(--ink-2)}
+
+/* ---------- sections ---------- */
+section{margin-top:72px}
+.sec-head{
+  display:flex;align-items:baseline;gap:14px;
+  padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:26px;
+}
+.sec-head .n{font-family:var(--mono);font-size:.75rem;color:var(--muted-2)}
+.copy{display:flex;flex-direction:column;gap:16px;color:var(--muted);max-width:680px}
+.copy .lead{color:var(--ink-2)}
+
+.fill{
+  color:var(--ink-2);border-bottom:1px dashed var(--border-strong);padding-bottom:1px;
+}
+
+/* ---------- sequence ---------- */
+.seq{margin-top:28px;border-top:1px solid var(--border)}
+.step{
+  display:grid;grid-template-columns:72px 1fr auto;gap:20px;align-items:start;
+  padding:20px 0;border-bottom:1px solid var(--border);
+}
+.step .n{
+  font-family:var(--mono);font-size:.8125rem;color:var(--muted);
+  padding-top:.3em;font-variant-numeric:tabular-nums;
+}
+.step .n.q{color:var(--muted-2)}
+.step h3{margin-bottom:3px}
+.step .ref{font-family:var(--mono);font-size:.6875rem;color:var(--muted-2);display:block;margin-bottom:6px}
+.step p{font-size:.9375rem;color:var(--muted);line-height:1.65}
+.step .dur{font-family:var(--mono);font-size:.75rem;color:var(--muted-2);white-space:nowrap;padding-top:.5em}
+.step.first{background:var(--surface-2);margin-inline:-16px;padding-inline:16px;border-radius:4px}
+@media(max-width:620px){
+  .step{grid-template-columns:56px 1fr;gap:14px}
+  .step .dur{grid-column:2;padding-top:6px}
+}
+
+/* ---------- panels ---------- */
+.panel{
+  margin-top:26px;background:var(--surface);border:1px solid var(--border);
+  border-radius:4px;padding:28px 30px;box-shadow:var(--shadow-2);
+  display:flex;flex-direction:column;gap:14px;max-width:680px;
+}
+.panel .amount{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.panel .amount .big{font-size:2rem;font-weight:600;letter-spacing:-.02em}
+.panel .amount .alt{font-family:var(--mono);font-size:.8125rem;color:var(--muted-2)}
+.panel p{font-size:.9375rem;color:var(--muted);line-height:1.7}
+
+/* ---------- specimen ---------- */
+.spec{
+  margin-top:24px;max-width:680px;background:var(--surface-2);
+  border:1px solid var(--border);border-left:3px solid var(--border-strong);
+  border-radius:4px;padding:22px 26px;display:flex;flex-direction:column;gap:12px;
+}
+.spec .cap{font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-2)}
+.spec ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.spec li{
+  display:grid;grid-template-columns:14px 1fr;gap:8px;
+  font-size:.9375rem;color:var(--ink-2);line-height:1.55;
+}
+.spec li::before{content:"—";color:var(--muted-2);font-family:var(--mono);font-size:.8125rem}
+.spec .after{font-size:.8125rem;color:var(--muted);line-height:1.6}
+
+.tracks{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px}
+@media(max-width:760px){.tracks{grid-template-columns:1fr}}
+.track{
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;
+  padding:28px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-2);
+}
+.track.emph{box-shadow:inset 0 0 0 1px var(--ring),var(--shadow-2);border-color:transparent}
+.track .who{font-size:.9375rem;color:var(--muted);line-height:1.65;min-height:3.3em}
+.track .amount{display:flex;flex-direction:column;gap:3px;padding-block:2px}
+.track .amount .big{font-size:1.75rem;font-weight:600;letter-spacing:-.02em}
+.track .amount .alt{font-family:var(--mono);font-size:.75rem;color:var(--muted-2)}
+.track .hr{height:1px;background:var(--border)}
+.track ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.track li{
+  display:grid;grid-template-columns:14px 1fr;gap:10px;
+  font-size:.9375rem;color:var(--muted);line-height:1.55;
+}
+.track li::before{
+  content:"";width:5px;height:5px;margin-top:.62em;border-radius:50%;
+  background:var(--muted-2);
+}
+.track li.key::before{background:var(--ink);box-shadow:0 0 0 3px var(--surface-2)}
+.track .fine{font-size:.8125rem;color:var(--muted-2);line-height:1.6}
+
+/* ---------- two columns ---------- */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:24px}
+@media(max-width:760px){.two{grid-template-columns:1fr;gap:30px}}
+.stack{display:flex;flex-direction:column;gap:13px;margin-top:14px}
+.row{display:flex;flex-direction:column;gap:3px;padding-bottom:13px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row .t{font-weight:600;font-size:.9375rem;color:var(--ink-2)}
+.row .d{font-size:.9375rem;color:var(--muted);line-height:1.6}
+.row.out .t{color:var(--muted)}
+.row.out .t::before{content:"— ";color:var(--muted-2)}
+
+/* ---------- terms ---------- */
+.terms{display:grid;grid-template-columns:140px 1fr;gap:13px 24px;margin-top:24px}
+.terms dt{
+  font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted-2);padding-top:.4em;
+}
+.terms dd{font-size:.9375rem;color:var(--muted);line-height:1.65}
+@media(max-width:620px){.terms{grid-template-columns:1fr;gap:3px 0}.terms dd{margin-bottom:15px}}
+
+/* ---------- close ---------- */
+.close{margin-top:76px;padding-top:36px;border-top:1px solid var(--border-strong);
+  display:flex;flex-direction:column;gap:18px;max-width:680px}
+.cta{
+  align-self:flex-start;display:inline-flex;align-items:center;gap:9px;
+  background:var(--ink);color:var(--bg);text-decoration:none;
+  padding:13px 22px;border-radius:4px;font-size:.9375rem;font-weight:600;
+  font-family:inherit;transition:all .2s ease;
+}
+.cta:hover{transform:translateY(-1px);box-shadow:var(--shadow-2)}
+.cta{border:0;cursor:pointer;font-family:inherit}
+.contact{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.addr{font-family:var(--mono);font-size:.9375rem;color:var(--ink-2);user-select:all;-webkit-user-select:all}
+.copied{font-size:.8125rem;color:var(--muted);opacity:0;transition:opacity .2s ease}
+.copied.on{opacity:1}
+.sig{font-size:.9375rem;color:var(--muted)}
+footer{
+  margin-top:64px;padding-top:16px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:.75rem;color:var(--muted-2);
+}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.reveal{opacity:0}
+.reveal.in{animation:fadeInUp .8s ease-out forwards}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1}.reveal.in{animation:none}}
+</style>
+
+<div class="wrap">
+
+
+  <header class="masthead">
+    <img class="logo-spin" alt="The Lichen Protocol" src="data:image/png;base64,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">
+    <div class="brandline">
+      <span class="label">Series 11</span>
+      <span class="sep"></span>
+      <span class="label">Protocols 11.0 to 11.5</span>
+    </div>
+    <h1>__HEADLINE__</h1>
+    <p class="standfirst">Seven one-to-one sessions over eight weeks, plus a check-in at ninety days. For anyone who knows they need to get out of something — a job, a role, a business, a partnership — and wants to do it properly.</p>
+    <div class="meta">
+      <div><span class="label">Prepared for</span><span class="v"><span id="mFor">__TO__</span></span></div>
+      <div><span class="label">By</span><span class="v"><span id="mFrom">__FROM__</span></span></div>
+      <div><span class="label">Date</span><span class="v mono" id="mDate">__DATE__</span></div>
+      <div><span class="label">Valid for</span><span class="v mono">30 days</span></div>
+    </div>
+  </header>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">01</span><h2>What I heard</h2></div>
+    <div class="copy">
+      <p class="lead" id="situation">__SITUATION__</p>
+      <p>Most people who get this far have already tried the obvious things — a break, better boundaries, handing work off, restructuring. It works for a few weeks and then it doesn't. That's usually because the changes were made inside the same setup that caused the problem, so the setup absorbed them.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">02</span><h2>Why the obvious fixes don't stick</h2></div>
+    <div class="copy">
+      <p class="lead">A "field" is just the setup you're operating inside — the incentives, the expectations, the habits it rewards, the things it makes you ignore.</p>
+      <p>It's hard to see from the inside, which is why people usually conclude the problem is them. They work harder, get more organised, try to want it more. None of that touches the setup, so nothing changes for long.</p>
+      <p>Two things this series does that a few conversations with a friend won't. It gets the setup written down so you can look at it. Then it gives the leaving an actual plan, so you don't take the same problem into the next thing.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">03</span><h2>Start with one session</h2></div>
+    <div class="copy">
+      <p>You don't have to commit to leaving anything to start. The first session stands on its own, and it's the only decision in front of you right now.</p>
+    </div>
+    <div class="panel">
+      <span class="label">Session one · Protocol 11.0, Field Diagnostic</span>
+      <div class="amount"><span class="big">NZ$600</span></div>
+      <p>Ninety minutes. We go through what you're actually doing day to day, what gets rewarded and punished where you are, and what you've been telling yourself about it. You leave with a written summary.</p>
+      <p>Some people do this session, see the situation clearly, and decide to stay — with their eyes open. That's a fine outcome and the session did its job. If you want to carry on, the full NZ$600 comes off either price below, within thirty days.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">04</span><h2>What the eight weeks look like</h2></div>
+    <div class="copy">
+      <p>Seven sessions, one a week, run live. The order matters — each one sets up the next. After every session you get a daily practice to work with in between, which is where a lot of it lands.</p>
+    </div>
+    <div class="seq">
+      <div class="step first">
+        <span class="n">1</span>
+        <div><span class="ref">Protocol 11.0 · Field Diagnostic</span><h3>Work out what you're actually in</h3><p>What you do under pressure, what gets rewarded, what gets ignored, and what story you've been running. Write it down.</p></div>
+        <span class="dur">90 min</span>
+      </div>
+      <div class="step">
+        <span class="n">2</span>
+        <div><span class="ref">Protocol 11.1 · Knowing When a Field Must End</span><h3>Decide whether it's really over</h3><p>Separate "this is hard right now" from "this is finished." Be honest about what you're hoping will turn around, and whether that's realistic.</p></div>
+        <span class="dur">75 min</span>
+      </div>
+      <div class="step">
+        <span class="n">3</span>
+        <div><span class="ref">Protocol 11.2 · Composting the Old Signal</span><h3>Deal with what you're carrying</h3><p>Guilt, resentment, disappointment, the things you haven't said. Get them named now, because they follow you otherwise.</p></div>
+        <span class="dur">75 min</span>
+      </div>
+      <div class="step">
+        <span class="n">4</span>
+        <div><span class="ref">Protocol 11.3 · Extracting the Gifts Without Carrying the Pattern</span><h3>Keep what's useful, drop the rest</h3><p>Work out what you genuinely learned and what habits you picked up that you don't want, so you don't rebuild the same problem somewhere else.</p></div>
+        <span class="dur">75 min</span>
+      </div>
+      <div class="step">
+        <span class="n">5</span>
+        <div><span class="ref">Protocol 11.4 · Designing a Clean Exit</span><h3>Plan the exit properly</h3><p>Loose ends, money and paperwork, who you tell and in what order, the handover, the conversations you owe people. A checklist you actually work through.</p></div>
+        <span class="dur">90 min</span>
+      </div>
+      <div class="step">
+        <span class="n">6</span>
+        <div><span class="ref">Protocol 11.5 · Walking Forward Without Residue</span><h3>Start the next thing clean</h3><p>Stop replaying it. Get your attention back on what's in front of you and decide the first real thing you're doing next.</p></div>
+        <span class="dur">75 min</span>
+      </div>
+      <div class="step">
+        <span class="n">7</span>
+        <div><h3>Check-in, two weeks later</h3><p>What's settled, what hasn't, what still needs doing.</p></div>
+        <span class="dur">60 min</span>
+      </div>
+      <div class="step">
+        <span class="n q">↩</span>
+        <div><h3>Check-in at 90 days</h3><p>Most people who leave something badly are half back in it within three months. This is where that shows up. Included, not an upsell.</p></div>
+        <span class="dur">45 min</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">05</span><h2>What you do between sessions</h2></div>
+    <div class="copy">
+      <p class="lead">After every session I write you a daily practice — a short document, specific to what came up in that session, so you have something to hold onto in the week between.</p>
+      <p>It's not homework and it isn't journalling. It's about thirty seconds a day: one thing to watch for while you're working, and two or three questions at the end of the day.</p>
+      <p>Each one builds on the last rather than replacing it, and it stops at five things. Once you're holding enough, later sessions make the practice lighter rather than longer — the job by then is to keep what you've already got, not to add more.</p>
+    </div>
+    <div class="spec">
+      <span class="cap">From a real practice — the end-of-day check</span>
+      <ul>
+        <li>Was there a moment today I took on something that wasn't mine?</li>
+        <li>Or a moment I set down something that wasn't?</li>
+        <li>What am I setting down before tomorrow?</li>
+      </ul>
+      <p class="after">Written for you, using the things you actually said — not a template with your name on it.</p>
+    </div>
+    <div class="copy" style="margin-top:20px">
+      <p>Two things are built into every one of them. It's small enough that you can't fail at it, because a practice that takes discipline would just be another version of the problem you're trying to leave. And there's no streak to break — you'll forget it some days, and that's written into the document itself.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head" id="sec-price"><span class="n">06</span><h2>Two prices</h2></div>
+    <div class="copy">
+      <p>Same seven sessions either way. The difference is whether other people are involved.</p>
+    </div>
+    <div class="tracks">
+      <div class="track">
+        <span class="label">Option A · Just you</span>
+        <p class="who">For someone paying personally, usually while the thing they're leaving is still the income.</p>
+        <div class="amount"><span class="big">NZ$2,400</span><span class="alt">two payments, no extra charge</span></div>
+        <div class="hr"></div>
+        <ul>
+          <li>All seven sessions</li>
+          <li>A daily practice written after every session</li>
+          <li>Check-in at 90 days</li>
+          <li>Written summary of your situation</li>
+          <li>Your written answers, kept and organised</li>
+          <li>The exit checklist from session five</li>
+        </ul>
+        <p class="fine">Second payment is due before session four, so you decide whether to carry on after you've seen what the work is like.</p>
+      </div>
+      <div class="track emph">
+        <span class="label">Option B · Others involved</span>
+        <p class="who">For when the leaving lands on other people too — a business partner, a team, a family — or when an employer is paying.</p>
+        <div class="amount"><span class="big">NZ$6,000</span><span class="alt">invoiced to you or your organisation</span></div>
+        <div class="hr"></div>
+        <ul>
+          <li>Everything in Option A</li>
+          <li class="key">A session with whoever else this lands on — a business partner, a boss, a spouse. If they weren't part of it, you'll be re-explaining the decision for a year</li>
+          <li class="key">A formal written summary you can hand to a partner, a board, or whoever needs to see it</li>
+          <li class="key">Email or voice access between sessions, roughly 48-hour reply, for decisions that come up mid-way</li>
+          <li class="key">A second check-in at 180 days</li>
+        </ul>
+        <p class="fine">Option B isn't Option A with a bigger invoice. It's the version that brings the other people into the room.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">07</span><h2>What you get, and what this isn't</h2></div>
+    <div class="two">
+      <div>
+        <span class="label-lg">What you get</span>
+        <div class="stack">
+          <div class="row"><span class="t">A written summary</span><span class="d">Your situation on paper — what it rewarded, what it cost you, what you're not doing again.</span></div>
+          <div class="row"><span class="t">Your own answers, kept</span><span class="d">What you wrote between sessions, organised. Useful six months later when you're second-guessing the decision.</span></div>
+          <div class="row"><span class="t">Seven daily practices</span><span class="d">One after each session, each built for what came up in it. Short, specific, and yours to keep using afterwards.</span></div>
+          <div class="row"><span class="t">An exit checklist</span><span class="d">From session five. Loose ends, conversations, handover, and the order you do them in.</span></div>
+        </div>
+      </div>
+      <div>
+        <span class="label-lg">What this isn't</span>
+        <div class="stack">
+          <div class="row out"><span class="t">Therapy</span><span class="d">It's time-boxed and aimed at a decision. If you need clinical support I'll say so and stop.</span></div>
+          <div class="row out"><span class="t">Career advice</span><span class="d">No CV, no positioning, no list of options. That work is fine, and it's premature until you know what you're choosing by.</span></div>
+          <div class="row out"><span class="t">Me making the call</span><span class="d">I won't tell you whether to leave. The point is that you can see it clearly enough to decide.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="sec-head"><span class="n">08</span><h2>Terms</h2></div>
+    <dl class="terms">
+      <dt>Schedule</dt><dd>Weekly for eight weeks. Fortnightly if your exit has a longer timeline — same order, bigger gaps.</dd>
+      <dt>Format</dt><dd>Video, or in person in Auckland. Not recorded unless you ask.</dd>
+      <dt>Confidentiality</dt><dd>Nothing leaves the session. If I ever use your case as an anonymous example, it's because you gave me permission in writing first.</dd>
+      <dt>Rescheduling</dt><dd>48 hours' notice, no charge, no limit.</dd>
+      <dt>Payment</dt><dd>Option A in two payments. Option B invoiced, 14-day terms, in one or two parts. The NZ$600 first session is paid at booking and comes off the total if you continue within 30 days.</dd>
+      <dt>Stopping</dt><dd>If you decide this isn't the right thing, we stop and I refund the sessions you haven't used.</dd>
+      <dt>This price</dt><dd>An introductory rate for the first five people. It goes up once I have results to point at.</dd>
+    </dl>
+  </section>
+
+  <div class="close reveal" id="sec-close">
+    <span class="label">Next step</span>
+    <h2>One session, ninety minutes.</h2>
+    <p class="copy">Book the first one. Get the situation written down. Then decide whether you're leaving, from a clearer position than you're in now.</p>
+    <div class="contact">
+      <a class="cta" id="cta" href="mailto:__EMAIL__?subject=Field%20Exit%20%E2%80%94%20first%20session">Send me an email</a>
+      <span class="addr" id="addr">__EMAIL__</span>
+      <span class="copied" id="copied">Address copied</span>
+    </div>
+    <p class="sig">— <span id="sigName">__FROM__</span></p>
+  </div>
+
+  <footer>
+    <span>The Lichen Protocol · Series 11 · Field Exit</span>
+    <span class="mono" id="footDate">__DATE__</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* Personalise by editing these five values. Empty strings leave the
+     dashed placeholders in place and keep the template panel visible. */
+  var DETAILS = {
+    to:        "__TO__",
+    org:       "",
+    from:      "__FROM__",
+    email:     "__EMAIL__",
+    date:      "__DATE__",
+    situation: ""
+  };
+
+  function v(k){ return (DETAILS[k] || "").trim() || null; }
+  var to = v('to'), from = v('from'), org = v('org'),
+      date = v('date'), email = v('email'), sit = v('situation');
+
+  if (to){
+    var tplEl = document.getElementById('tpl');
+    if (tplEl) { tplEl.classList.add('hidden'); }
+    var f = document.getElementById('mFor');
+    f.textContent = to + (org ? ' \u00b7 ' + org : '');
+    f.classList.remove('fill');
+  }
+  if (from){
+    ['mFrom','sigName'].forEach(function(id){
+      var el = document.getElementById(id);
+      el.textContent = from; el.classList.remove('fill');
+    });
+  }
+  if (date){
+    document.getElementById('mDate').textContent = date;
+    document.getElementById('footDate').textContent = date;
+  }
+  if (sit){
+    var s2 = document.getElementById('situation');
+    s2.textContent = sit; s2.className = 'lead';
+  }
+  var addrEl = document.getElementById('addr');
+  var btn    = document.getElementById('cta');
+  var copied = document.getElementById('copied');
+  var SUBJECT = 'Field Exit \u2014 first session';
+
+  if (email) { addrEl.textContent = email; }
+
+  /* mailto: navigation is blocked inside a sandboxed frame, so use a real
+     email link when the page is top-level and copy-to-clipboard when framed. */
+  var framed;
+  try { framed = (window.self !== window.top); } catch (e) { framed = true; }
+
+  function copyAddress(){
+    var text = addrEl.textContent || '';
+    if (!text) return;
+    function done(){
+      copied.classList.add('on');
+      setTimeout(function(){ copied.classList.remove('on'); }, 2000);
+    }
+    function fallback(){
+      try {
+        var t = document.createElement('textarea');
+        t.value = text; t.setAttribute('readonly','');
+        t.style.position = 'absolute'; t.style.left = '-9999px';
+        document.body.appendChild(t); t.select();
+        document.execCommand('copy'); document.body.removeChild(t);
+        done();
+      } catch (e2) {
+        var r = document.createRange(); r.selectNodeContents(addrEl);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  }
+
+  if (!framed && email){
+    btn.setAttribute('href', 'mailto:' + email + '?subject=' + encodeURIComponent(SUBJECT));
+    btn.textContent = 'Send me an email';
+  } else {
+    btn.setAttribute('href', '#');
+    btn.textContent = 'Copy email address';
+    btn.addEventListener('click', function(ev){ ev.preventDefault(); copyAddress(); });
+  }
+
+  var els = document.querySelectorAll('.reveal');
+  if (!window.IntersectionObserver || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    els.forEach(function(e){ e.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function(en){
+    en.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {rootMargin:'0px 0px -60px 0px'});
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+
+<script>
+(function(){
+  var ID = "__SLUG__";
+  function ping(e){
+    try{
+      var u = '../_track.php?id=' + encodeURIComponent(ID) + '&e=' + e;
+      if (navigator.sendBeacon) { navigator.sendBeacon(u); }
+      else { var i = new Image(); i.src = u; }
+    } catch(err){}
+  }
+  ping('open');
+  var seen = {};
+  function watch(sel, name){
+    var el = document.querySelector(sel);
+    if (!el || !window.IntersectionObserver) return;
+    var o = new IntersectionObserver(function(en){
+      en.forEach(function(x){
+        if (x.isIntersecting && !seen[name]){ seen[name] = 1; ping(name); o.disconnect(); }
+      });
+    });
+    o.observe(el);
+  }
+  watch('#sec-price', 'price');
+  watch('#sec-close', 'end');
+})();
+</script>
+
+</body>
+</html>

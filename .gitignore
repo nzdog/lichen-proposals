@@ -1,0 +1,14 @@
+# Keys live only on the server
+site/_config.php
+
+# Runtime state, written by _track.php and _new.php
+site/_log/hits.csv
+site/_log/sent.csv
+
+# Proposals generated during local testing. On the server these are created by
+# _new.php and must never be deleted by a deploy.
+site/*/
+!site/_tpl/
+!site/_log/
+
+.DS_Store
