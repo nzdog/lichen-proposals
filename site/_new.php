@@ -183,8 +183,10 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
 </head>
 <body>
 <div class="w">
-  <h1>New proposal</h1>
-  <p class="sub">Fill this in and the page is written straight to the server. No download, no upload.</p>
+  <h1><?= $made ? 'Proposal built' : 'New proposal' ?></h1>
+  <p class="sub"><?= $made
+    ? 'It is on the server and the link below is live. Nothing else to do.'
+    : 'Fill this in and the page is written straight to the server. No download, no upload.' ?></p>
 
 <?php if ($error !== ''): ?>
   <div class="out err"><h2>Not built</h2><p style="color:inherit"><?= h($error) ?></p></div>
@@ -198,11 +200,13 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
     <div class="actions">
       <a href="<?= h($made['url']) ?>" target="_blank" rel="noopener"><button type="button" class="ghost">Open it</button></a>
       <button type="button" class="ghost" id="copy">Copy the link</button>
+      <a href="<?= h($self) ?>"><button type="button" class="ghost">Write another</button></a>
       <span id="copied" style="font-size:.8125rem;color:var(--muted);opacity:0;transition:opacity .2s">Copied</span>
     </div>
   </div>
 <?php endif; ?>
 
+<?php if (!$made): ?>
   <form method="post" action="<?= h($self) ?>">
     <div class="f">
       <label for="version">Which version</label>
@@ -256,6 +260,7 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
       <button type="submit" name="action" value="preview" formtarget="_blank" class="ghost">Preview first</button>
     </div>
   </form>
+<?php endif; ?>
 </div>
 <script>
 var c = document.getElementById('copy');
