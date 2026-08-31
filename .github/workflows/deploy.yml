@@ -24,7 +24,7 @@ jobs:
       - name: Check every template placeholder is one _new.php substitutes
         run: |
           set -euo pipefail
-          known='__HEADLINE__ __TO__ __FROM__ __EMAIL__ __DATE__ __SITUATION__ __SLUG__'
+          known='__HEADLINE__ __TO__ __TO_URL__ __FROM__ __EMAIL__ __DATE__ __SITUATION__ __SLUG__'
           fail=0
           for f in site/_tpl/*.html; do
             for ph in $(grep -o '__[A-Z_]\+__' "$f" | sort -u); do

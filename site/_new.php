@@ -51,6 +51,7 @@ function build_html(string $version, array $f, string $slug): string {
     return strtr($tpl, [
         '__HEADLINE__'  => h($f['headline'] !== '' ? $f['headline'] : VERSIONS[$version]['headline']),
         '__TO__'        => $who,
+        '__TO_URL__'    => rawurlencode($f['to']),
         '__FROM__'      => h($f['from']),
         '__EMAIL__'     => h($f['email']),
         '__DATE__'      => h($f['date']),
