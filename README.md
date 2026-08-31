@@ -46,8 +46,8 @@ Most deploy tooling *mirrors*: anything on the server that is not in the repo
 gets deleted. Pointed at `p/`, that would erase live client proposals and the
 entire tracking log, and every link already sent would start 404ing.
 
-So `.github/workflows/deploy.yml` uploads an explicit list of files over FTPS
-and has no mirror, sync or delete step anywhere in it. It cannot remove a
+So `.github/workflows/deploy.yml` PUTs an explicit list of files over WebDAV
+and has no mirror, sync or DELETE step anywhere in it. It cannot remove a
 proposal folder because it has no ability to remove anything. The cost is that
 renaming or deleting a file here leaves the old one on the server — tidy those
 by hand, rarely.
@@ -79,27 +79,35 @@ left open inflates it, and a page restored from bfcache can fire `end` before
    a deploy cannot overwrite it. Rotating a key is editing this one file.
    Until it exists, both `_new.php` and `_view.php` return 404 — they fail closed.
 
-2. **Add three repository secrets** under Settings → Secrets and variables →
+2. **Make a Web Disk account.** cPanel → Files → **Web Disk** → Add Web Disk
+   Account. This plan has FTP disabled, so Web Disk (WebDAV over HTTPS on port
+   2078) is the transport.
+
+   | Field | Value |
+   |---|---|
+   | Username | `deploy` — becomes `deploy@lichenprotocol.com` |
+   | Password | use the generator |
+   | Directory | `public_html/p` |
+   | Permissions | Read-Write |
+
+   Restrict the Directory rather than leaving it at the home folder. If it ever
+   leaks, the blast radius is one directory instead of the whole account.
+
+3. **Add three repository secrets** under Settings → Secrets and variables →
    Actions:
 
-   | Secret | Value | Where to find it |
-   |---|---|---|
-   | `FTP_HOST` | `minnie.whsl206.com` | The hostname in your cPanel URL — **not** `lichenprotocol.com`. The server's TLS certificate is issued for its own hostname, and the deploy verifies it. |
-   | `FTP_USER` | `deploy@lichenprotocol.com` | cPanel → Files → **FTP Accounts** → Add FTP Account. |
-   | `FTP_PASS` | the password you set there | Use cPanel's generator; you never type it again. |
+   | Secret | Value |
+   |---|---|
+   | `WEBDISK_HOST` | `minnie.whsl206.com` — the hostname from your cPanel URL, not the domain |
+   | `WEBDISK_USER` | `deploy@lichenprotocol.com` — the full string |
+   | `WEBDISK_PASS` | the password you generated |
 
-   Make a **dedicated FTP account**, not the main cPanel login. The main login's
-   password is your cPanel password — putting that in GitHub gives every
-   workflow run the keys to email, databases and backups. A dedicated account
-   restricted to `public_html/p` can only write where it needs to.
+   Because the account is rooted at `public_html/p`, also add a repository
+   **variable** (Variables tab, not Secrets) `WEBDISK_DIR` set to `.` — without
+   it the files land in `p/public_html/p/`.
 
-   If you do restrict it that way, also add a repository **variable** (not
-   secret) `FTP_REMOTE_DIR` set to `.` — that account already logs into
-   `public_html/p`, so without it the files land in `p/public_html/p/`. Leave
-   the variable unset if you used the main cPanel account.
-
-3. **Push to `main`.** The workflow checks PHP syntax and template
-   placeholders, uploads, then verifies the live site.
+4. **Push to `main`.** The workflow checks PHP syntax and template
+   placeholders, checks the connection, uploads, then verifies the live site.
 
 ## Offline fallback
 

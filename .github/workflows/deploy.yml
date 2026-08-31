@@ -36,31 +36,57 @@ jobs:
           done
           exit $fail
 
-      - name: Upload over FTPS
+      - name: Upload over Web Disk
         env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
-          FTP_REMOTE_DIR: ${{ vars.FTP_REMOTE_DIR }}
+          WEBDISK_HOST: ${{ secrets.WEBDISK_HOST }}
+          WEBDISK_USER: ${{ secrets.WEBDISK_USER }}
+          WEBDISK_PASS: ${{ secrets.WEBDISK_PASS }}
+          WEBDISK_DIR:  ${{ vars.WEBDISK_DIR }}
         run: |
           set -euo pipefail
-          : "${FTP_HOST:?set the FTP_HOST repository secret}"
-          : "${FTP_USER:?set the FTP_USER repository secret}"
-          : "${FTP_PASS:?set the FTP_PASS repository secret}"
+          : "${WEBDISK_HOST:?set the WEBDISK_HOST repository secret}"
+          : "${WEBDISK_USER:?set the WEBDISK_USER repository secret}"
+          : "${WEBDISK_PASS:?set the WEBDISK_PASS repository secret}"
 
-          # Paths are relative to whatever directory the FTP account logs into.
-          # The main cPanel account lands in /home/<user>, so the target is
-          # public_html/p. A dedicated FTP account restricted to public_html/p
-          # lands there already — set the FTP_REMOTE_DIR variable to "." for
-          # that case, or the files end up in p/public_html/p/.
-          REMOTE_DIR="${FTP_REMOTE_DIR:-public_html/p}"
-          REMOTE_DIR="${REMOTE_DIR%/}"
-          [ "$REMOTE_DIR" = "." ] && REMOTE_DIR=""
-          [ -n "$REMOTE_DIR" ] && REMOTE_DIR="$REMOTE_DIR/"
-          echo "Target: ftps://$FTP_HOST/${REMOTE_DIR}"
+          # cPanel serves Web Disk (WebDAV) over TLS on 2078.
+          BASE="https://${WEBDISK_HOST}:2078"
 
-          # Explicit per-file uploads. There is deliberately no mirror, sync or
-          # delete anywhere in this job: proposal folders and _log/ are created
+          # Paths are relative to whatever directory the Web Disk account is
+          # rooted at. An account restricted to public_html/p is already there,
+          # so WEBDISK_DIR should be "." for that case; an unrestricted account
+          # starts at the home directory and needs the default.
+          DIR="${WEBDISK_DIR:-public_html/p}"
+          DIR="${DIR%/}"
+          [ "$DIR" = "." ] && DIR=""
+          [ -n "$DIR" ] && DIR="$DIR/"
+          echo "Target: $BASE/${DIR}"
+
+          dav() { curl -sS -m 60 --user "$WEBDISK_USER:$WEBDISK_PASS" "$@"; }
+
+          # Fail early and legibly on a bad host, bad password or blocked port,
+          # rather than part-way through the upload.
+          code=$(dav -o /dev/null -w '%{http_code}' "$BASE/${DIR}")
+          case "$code" in
+            200|207|301|302) echo "Connected." ;;
+            401) echo "::error::401 — WEBDISK_USER or WEBDISK_PASS is wrong."; exit 1 ;;
+            404) echo "::error::404 — ${DIR} does not exist. Check WEBDISK_DIR."; exit 1 ;;
+            000) echo "::error::Could not reach $BASE. Is Web Disk enabled, and is 2078 open?"; exit 1 ;;
+            *)   echo "::error::Unexpected $code from $BASE/${DIR}"; exit 1 ;;
+          esac
+
+          # MKCOL the subdirectories. 405 means it already exists, which is fine.
+          while read -r d; do
+            [ -z "$d" ] && continue
+            code=$(dav -o /dev/null -w '%{http_code}' -X MKCOL "$BASE/${DIR}${d}/")
+            case "$code" in
+              201) echo "  created $d/" ;;
+              405) echo "  $d/ exists" ;;
+              *)   echo "::error::MKCOL $d/ returned $code"; exit 1 ;;
+            esac
+          done < <(cd site && find . -mindepth 1 -type d -printf '%P\n' | sort)
+
+          # Explicit per-file PUTs. There is deliberately no mirror, sync or
+          # DELETE anywhere in this job: proposal folders and _log/ are created
           # on the server at runtime and are not in this repo, so anything that
           # could remove unknown remote files would destroy live client pages.
           mapfile -t FILES < <(cd site && find . -type f -printf '%P\n' | sort)
@@ -68,13 +94,14 @@ jobs:
 
           for f in "${FILES[@]}"; do
             if [ "$f" = "_config.php" ]; then
-              echo "  refusing to upload _config.php — keys live only on the server"
+              echo "::error::refusing to upload _config.php — keys live only on the server"
               exit 1
             fi
-            curl --fail --silent --show-error --ssl-reqd --ftp-create-dirs \
-                 --user "$FTP_USER:$FTP_PASS" \
-                 -T "site/$f" "ftps://$FTP_HOST/${REMOTE_DIR}$f"
-            echo "  $f"
+            code=$(dav -o /dev/null -w '%{http_code}' -T "site/$f" "$BASE/${DIR}$f")
+            case "$code" in
+              200|201|204) echo "  $f" ;;
+              *) echo "::error::PUT $f returned $code"; exit 1 ;;
+            esac
           done
 
       - name: Verify the live site
@@ -89,9 +116,9 @@ jobs:
           }
           # The beacon answers, the directory does not list, the log is sealed,
           # and the gated pages give nothing away without a key.
-          check https://lichenprotocol.com/p/_track.php      204
-          check https://lichenprotocol.com/p/                403
-          check https://lichenprotocol.com/p/_log/hits.csv   403
+          check https://lichenprotocol.com/p/_track.php        204
+          check https://lichenprotocol.com/p/                  403
+          check https://lichenprotocol.com/p/_log/hits.csv     403
           check https://lichenprotocol.com/p/_tpl/general.html 403
-          check https://lichenprotocol.com/p/_new.php        404
-          check https://lichenprotocol.com/p/_view.php       404
+          check https://lichenprotocol.com/p/_new.php          404
+          check https://lichenprotocol.com/p/_view.php         404
