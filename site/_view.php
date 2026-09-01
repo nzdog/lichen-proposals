@@ -57,7 +57,7 @@ sort($removed);
 
 uasort($sent, fn($a, $b) => strcmp($b['t'], $a['t']));
 
-$label = ['open' => 'Opened', 'price' => 'Reached the price', 'end' => 'Read to the end'];
+$label = ['open' => 'Opened', 'price' => 'Reached the offer', 'end' => 'Read to the end'];
 
 /* What was actually sent. The proposal itself is the record — reading it back
    means there is nothing to keep in step, and an edit made by hand afterwards
@@ -89,7 +89,7 @@ function summarise(array $events): array {
     usort($events, fn($a, $b) => strcmp($a['t'], $b['t']));
     $kinds  = array_column($events, 'e');
     $depth  = in_array('end', $kinds, true)   ? 'Read to the end'
-            : (in_array('price', $kinds, true) ? 'Reached the price' : 'Opened only');
+            : (in_array('price', $kinds, true) ? 'Reached the offer' : 'Opened only');
     $visits = 1;
     $prev   = strtotime($events[0]['t']);
     foreach ($events as $ev) {

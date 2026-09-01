@@ -3,7 +3,7 @@
    event only. No IP address, no user agent, no cookie, no third party.
 
    The first time each event happens for a proposal, it emails you. Three
-   messages per proposal at most — opened, reached the price, read to the end —
+   messages per proposal at most — opened, reached the offer, read to the end —
    so a person re-reading it does not fill your inbox. */
 
 require __DIR__ . '/_lib.php';
@@ -41,7 +41,7 @@ function first_time_note(string $id, string $e, array $rows, string $base): ?arr
 {
     $labels = [
         'open'  => 'opened the proposal',
-        'price' => 'reached the price',
+        'price' => 'reached the offer',
         'end'   => 'read it to the end',
     ];
     if (!isset($labels[$e]) || !is_dir($base . '/' . $id)) { return null; }

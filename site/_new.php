@@ -14,6 +14,7 @@ require_key('new_key');
 const VERSIONS = [
     'general' => ['file' => 'general.html', 'headline' => 'The Lichen Protocol Field Exit'],
     'lawyer'  => ['file' => 'lawyer.html',  'headline' => "Before you decide what's next"],
+    'invited' => ['file' => 'invited.html', 'headline' => 'The Lichen Protocol Field Exit'],
 ];
 
 /* Reduces a name to a safe directory stem. Anything outside [a-z0-9] becomes a
@@ -247,6 +248,7 @@ code{font-family:ui-monospace,monospace;font-size:.8125rem;background:var(--surf
       <select id="version" name="version">
         <option value="general"<?= $v === 'general' ? ' selected' : '' ?>>General — "The Lichen Protocol Field Exit"</option>
         <option value="lawyer"<?= $v === 'lawyer' ? ' selected' : '' ?>>Lawyer — "Before you decide what's next"</option>
+        <option value="invited"<?= $v === 'invited' ? ' selected' : '' ?>>Invited, no charge — "The Lichen Protocol Field Exit"</option>
       </select>
     </div>
 
