@@ -85,10 +85,11 @@ function recipient_name(string $id, string $base): string
 
 function send_note(array $note): void
 {
-    $cfg = proposal_config();
-    $to  = (string)($cfg['notify_email'] ?? $cfg['archive_email'] ?? '');
-    if ($to === '') { return; }
+    $to = notify_address();
+    if ($to === '') { mail_log('no address configured', $note[0]); return; }
 
-    @mail($to, $note[0], $note[1],
-          "From: $to\r\nContent-Type: text/plain; charset=UTF-8\r\n");
+    $ok = @mail($to, $note[0], $note[1],
+                "From: $to\r\nContent-Type: text/plain; charset=UTF-8\r\n");
+
+    mail_log($ok ? "accepted for $to" : "REFUSED by mail() for $to", $note[0]);
 }

@@ -129,3 +129,4 @@ jobs:
           check https://lichenprotocol.com/p/_new.php          404
           check https://lichenprotocol.com/p/_me.php           404
           check https://lichenprotocol.com/p/_view.php         404
+          check https://lichenprotocol.com/p/_mailcheck.php    404
