@@ -100,6 +100,13 @@ in the log. One place to do it rather than two. Nothing is destroyed — the row
 stay in `sent.csv` and `hits.csv`, a footnote names what is hidden, and putting
 the folder back brings it and its history straight back. That silence is the most useful thing in there.
 
+The first time each of those three happens for a proposal, `_track.php` emails
+`notify_email` (falling back to `archive_email`) — so an open reaches you
+without your going to look. Three messages per proposal at most, so someone
+re-reading it does not fill your inbox, and nothing at all for a slug with no
+folder, so a stranger poking at the endpoint cannot generate mail. Your own
+opens are already excluded by `_me.php`, so you never notify yourself.
+
 Read the depth badge, not the clock. Elapsed time is a floor on attention: a tab
 left open inflates it, and a page restored from bfcache can fire `end` before
 `open`. Repeat visits days apart are the signal worth trusting.
