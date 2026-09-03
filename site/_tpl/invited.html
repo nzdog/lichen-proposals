@@ -565,32 +565,6 @@ footer{
 })();
 </script>
 
-<script>
-(function(){
-  var ID = "__SLUG__";
-  function ping(e){
-    try{
-      var u = '../_track.php?id=' + encodeURIComponent(ID) + '&e=' + e;
-      if (navigator.sendBeacon) { navigator.sendBeacon(u); }
-      else { var i = new Image(); i.src = u; }
-    } catch(err){}
-  }
-  ping('open');
-  var seen = {};
-  function watch(sel, name){
-    var el = document.querySelector(sel);
-    if (!el || !window.IntersectionObserver) return;
-    var o = new IntersectionObserver(function(en){
-      en.forEach(function(x){
-        if (x.isIntersecting && !seen[name]){ seen[name] = 1; ping(name); o.disconnect(); }
-      });
-    });
-    o.observe(el);
-  }
-  watch('#sec-price', 'price');
-  watch('#sec-close', 'end');
-})();
-</script>
 
 </body>
 </html>

@@ -17,9 +17,4 @@ return [
     // BCC'd on every covering email written from the built-proposal panel,
     // so there is an archive of what was actually sent. Leave empty for none.
     'archive_email' => '',
-
-    // Emailed the first time each proposal is opened, reaches the offer, and
-    // is read to the end — three messages per proposal at most. Left empty it
-    // falls back to archive_email; empty both for no notifications.
-    'notify_email' => '',
 ];

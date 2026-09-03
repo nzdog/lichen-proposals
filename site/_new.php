@@ -44,7 +44,7 @@ function slugify(string $s): string {
     return substr($s, 0, 28) ?: 'proposal';
 }
 
-function build_html(string $version, array $f, string $slug): string {
+function build_html(string $version, array $f): string {
     $tpl = file_get_contents(__DIR__ . '/_tpl/' . VERSIONS[$version]['file']);
     if ($tpl === false) { throw new RuntimeException('Template missing: ' . $version); }
 
@@ -57,7 +57,6 @@ function build_html(string $version, array $f, string $slug): string {
         '__EMAIL__'     => h($f['email']),
         '__DATE__'      => h($f['date']),
         '__SITUATION__' => h($f['situation']),
-        '__SLUG__'      => $slug,
     ]);
 }
 
@@ -90,10 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             if (($_POST['action'] ?? '') === 'preview') {
-                /* Rendered, never written. The beacon in a preview resolves to
-                   /_track.php rather than /p/_track.php, so it 404s and no
-                   event reaches the log. */
-                $preview = build_html($version, $f, 'preview');
+                /* Rendered, never written. */
+                $preview = build_html($version, $f);
             } else {
                 $slug = slugify($f['to']) . '-' . bin2hex(random_bytes(3));
 
@@ -105,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException('That folder already exists. Try again.');
                 }
 
-                $html = build_html($version, $f, $slug);
+                $html = build_html($version, $f);
 
                 if (!@mkdir($dir, 0755)) {
                     throw new RuntimeException('Could not create ' . $slug . '/ — check permissions on /p.');
@@ -115,9 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException('Could not write index.html.');
                 }
 
-                /* A record of what was sent to whom. The hit log only ever
-                   knows slugs, so without this there is no way to see a
-                   proposal that was sent and never opened. */
+                /* A record of what was sent to whom, for _view.php. */
                 @file_put_contents(__DIR__ . '/_log/sent.csv',
                     gmdate('Y-m-d H:i:s') . ',' . $slug . ',' . $version . ','
                     . str_replace(["\n", ","], ' ', $f['to']) . ','

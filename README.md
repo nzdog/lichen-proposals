@@ -9,8 +9,7 @@ unguessable URL. Push to `main` and the templates and PHP redeploy themselves.
 | | |
 |---|---|
 | Write a proposal | `https://lichenprotocol.com/p/_new.php?k=<new_key>` |
-| See who has read one | `https://lichenprotocol.com/p/_view.php?k=<view_key>` |
-| Stop counting your own opens | `https://lichenprotocol.com/p/_me.php?k=<new_key>`, once per browser |
+| See what you have sent | `https://lichenprotocol.com/p/_view.php?k=<view_key>` |
 
 Both keys live in `_config.php` on the server. Neither is in this repo.
 
@@ -27,7 +26,7 @@ knowing someone else's.
 
 ## Editing a proposal
 
-The two pages are real HTML in `site/_tpl/`. Edit, commit, push to `main`, and
+The three pages are real HTML in `site/_tpl/`. Edit, commit, push to `main`, and
 the change is live in about a minute. It applies to proposals written *after*
 that — pages already sent are static files and do not change under the reader.
 
@@ -37,8 +36,8 @@ that — pages already sent are static files and do not change under the reader.
 | `_tpl/lawyer.html` | Before You Decide What's Next |
 
 Placeholders `_new.php` fills: `__HEADLINE__`, `__TO__`, `__FROM__`,
-`__EMAIL__`, `__DATE__`, `__SITUATION__`, `__SLUG__`. Everything except the
-slug is HTML-escaped. The deploy fails if a template uses a placeholder that
+`__EMAIL__`, `__DATE__`, `__SITUATION__`. All of them are
+HTML-escaped. The deploy fails if a template uses a placeholder that
 `_new.php` does not know how to fill, so a typo cannot ship as literal
 `__SITUAION__` text on a client's page.
 
@@ -73,7 +72,7 @@ is why every editable block can be treated as plain text.
 
 Most deploy tooling *mirrors*: anything on the server that is not in the repo
 gets deleted. Pointed at `p/`, that would erase live client proposals and the
-entire tracking log, and every link already sent would start 404ing.
+record of what was sent, and every link already sent would start 404ing.
 
 So `.github/workflows/deploy.yml` PUTs an explicit list of files over WebDAV
 and has no mirror, sync or DELETE step anywhere in it. It cannot remove a
@@ -81,35 +80,32 @@ proposal folder because it has no ability to remove anything. The cost is that
 renaming or deleting a file here leaves the old one on the server — tidy those
 by hand, rarely.
 
-After uploading it checks the live site: the beacon answers 204, `/p/` and
-`/p/_log/hits.csv` and `/p/_tpl/` all return 403, and both gated pages return a
-bare 404 without a key. A red build means the deploy landed wrong.
+After uploading it checks the live site: `/p/`, `/p/_log/sent.csv` and
+`/p/_tpl/` all return 403, both gated pages return a bare 404 without a key,
+and the retired beacon address still answers 204 for pages built before
+tracking was switched off. A red build means the deploy landed wrong.
 
-## Tracking
+## What is recorded, and what is not
 
-Each page beacons `../_track.php` on load, on reaching the price, and on
-reaching the close — a UTC timestamp, the slug and the event. No IP, no user
-agent, no cookie, no third party. `_new.php` separately records what was sent to
-whom in `_log/sent.csv`, so `_view.php` can show a proposal that was sent and
-never opened. Each card also carries a collapsed **What you sent**, read back
-from the proposal's own HTML rather than from a stored copy — so there is
-nothing to keep in step, and a page edited by hand afterwards shows its edit.
+`_new.php` records what was sent to whom in `_log/sent.csv`, and `_view.php`
+shows it, with each proposal's section 01 read back from the page's own HTML
+rather than from a stored copy — so there is nothing to keep in step, and a
+page edited by hand afterwards shows its edit.
+
+Nothing records whether a proposal was opened or read. Earlier versions did:
+a beacon on load, on reaching the offer and on reaching the close, with an
+email the first time each happened. It was switched off in September 2026.
+The pages promise that nothing leaves the session, and a page that silently
+reported how far someone read and when they came back was on the wrong side
+of that. If you want to know whether someone has read it, ask them.
+
+Pages built before then still carry the script, so `_track.php` remains as a
+stub that answers 204 and does nothing. It can be deleted once every proposal
+from before that date is gone.
 
 Deleting a proposal's folder is how a proposal is withdrawn: it stops appearing
-in the log. One place to do it rather than two. Nothing is destroyed — the rows
-stay in `sent.csv` and `hits.csv`, a footnote names what is hidden, and putting
-the folder back brings it and its history straight back. That silence is the most useful thing in there.
-
-The first time each of those three happens for a proposal, `_track.php` emails
-`notify_email` (falling back to `archive_email`) — so an open reaches you
-without your going to look. Three messages per proposal at most, so someone
-re-reading it does not fill your inbox, and nothing at all for a slug with no
-folder, so a stranger poking at the endpoint cannot generate mail. Your own
-opens are already excluded by `_me.php`, so you never notify yourself.
-
-Read the depth badge, not the clock. Elapsed time is a floor on attention: a tab
-left open inflates it, and a page restored from bfcache can fire `end` before
-`open`. Repeat visits days apart are the signal worth trusting.
+in `_view.php`. Nothing is destroyed — the row stays in `sent.csv`, a footnote
+names what is hidden, and putting the folder back brings it straight back.
 
 ## First-time setup
 
@@ -164,14 +160,14 @@ the web generator is the everyday path.
 ```
 site/                  mirrors public_html/p/
   _new.php             the generator — writes <slug>/index.html
-  _view.php            the private activity log
-  _track.php           the beacon endpoint
+  _view.php            the private record of what was sent
+  _track.php           retired beacon address; answers 204, records nothing
   _lib.php             key checking, fails closed
   _config.example.php  copy to _config.php ON THE SERVER only
   .htaccess            Options -Indexes, X-Robots-Tag noindex
   _log/.htaccess       Require all denied
   _tpl/.htaccess       Require all denied
-  _tpl/*.html          the two proposal pages
+  _tpl/*.html          the three proposal pages
 .github/workflows/deploy.yml
 tools/                 offline single-file generator
 ```
